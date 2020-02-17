@@ -177,9 +177,6 @@ void write_to_lcd()
 
   // write some chars
   mcp.digitalWrite(lcd_rs, true); // data register
-  write_one_digit(fb);
-  lcd_write(' ');
-  lcd_write(' ');
   write_one_digit(wf1);
   lcd_write(' ');
   lcd_write(' ');
@@ -199,7 +196,7 @@ void write_lcd_labels() {
 
   // write some chars
   mcp.digitalWrite(lcd_rs, true); // data register
-  char msg[] = "FB W1 W2 AL CH";
+  char msg[] = "W1 W2 AL CH";
   for(byte i=0; i < (sizeof(msg) - 1); i+=1) {
     lcd_write(msg[i]);
   }
@@ -388,7 +385,7 @@ void loop() {
     digitalWrite(13, true);
     fb = new_fb;
     set_algo_fb();
-    dirty = true;
+    //dirty = true;
   }
 
   // throttled
