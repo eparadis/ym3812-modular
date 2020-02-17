@@ -261,8 +261,7 @@ void cycle_voice_op2_waveform(byte voice) {
   ym3812_write(0xe3 + voice, wf2);
 }
 
-void cycle_voice_algo(byte voice) {
-  algo = (algo + 1) % 2;
+void set_voice_algo(byte voice) {
   ym3812_write(0xc0 + voice, algo | ((fb & 0x7) << 1));
 }
 
@@ -305,8 +304,9 @@ void cycle_op2_waveform() {
 }
 
 void cycle_algo() {
-  cycle_voice_algo(0);
-  cycle_voice_algo(1);
+  algo = (algo + 1) % 2;
+  set_voice_algo(0);
+  set_voice_algo(1);
 }
 
 void set_note() {
@@ -374,7 +374,7 @@ void loop() {
 
   // throttle to debounce
   count += 1;
-  if( count % 100 == 0) {
+  if( count % 10 == 0) {
     byte new_switches = ~(mcp.readGPIO(0) & 0x1F); // 0 is portA
     if(new_switches != switches) {
       switches = new_switches;
