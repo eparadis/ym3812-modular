@@ -191,7 +191,7 @@ void write_to_lcd()
 
 void setup() {
   // debug...
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
   init_lcd();
    
