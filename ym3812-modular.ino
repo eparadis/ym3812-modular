@@ -179,14 +179,30 @@ void write_to_lcd()
   mcp.digitalWrite(lcd_rs, true); // data register
   write_one_digit(fb);
   lcd_write(' ');
+  lcd_write(' ');
   write_one_digit(wf1);
   lcd_write(' ');
+  lcd_write(' ');
   write_one_digit(wf2);
+  lcd_write(' ');
   lcd_write(' ');
   write_one_digit(algo);
   //write_two_digit(vca);
   lcd_write(' ');
+  lcd_write(' ');
   write_one_digit(chord_mode);
+}
+
+void write_lcd_labels() {
+  mcp.digitalWrite(lcd_rs, false); // command register
+  lcd_write(0x80 + 64); // move to second line
+
+  // write some chars
+  mcp.digitalWrite(lcd_rs, true); // data register
+  char msg[] = "FB W1 W2 AL CH";
+  for(byte i=0; i < (sizeof(msg) - 1); i+=1) {
+    lcd_write(msg[i]);
+  }
 }
 
 void setup() {
@@ -194,6 +210,7 @@ void setup() {
   //Serial.begin(9600);
 
   init_lcd();
+  write_lcd_labels();
    
   static const uint8_t output_pins[] = {
     D2, D3, D4, D5, D6, D7, D8, D9,   // D0..D7
