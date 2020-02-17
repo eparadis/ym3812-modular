@@ -236,8 +236,8 @@ void setup_voice_op1(byte voice) {
 void setup_voice_op2(byte voice) {
   // op2, the one being modulated
   set_voice_op2_ADSR(voice);
-  ym3812_write(0x40 + voice, 0x00);  // ksl / output level
-  ym3812_write(0x20 + voice, 0x00 | 0x00 | 0x20 | 0x00 | 0x01 );  // AM, VIB, sus type, KSR, mult
+  ym3812_write(0x43 + voice, 0x00);  // ksl / output level
+  ym3812_write(0x23 + voice, 0x00 | 0x00 | 0x20 | 0x00 | 0x01 );  // AM, VIB, sus type, KSR, mult
   set_voice_op2_waveform(voice);  // ym3812_write(0xe0 + op2, 0x02);  // waveform (half sine)
 }
 
