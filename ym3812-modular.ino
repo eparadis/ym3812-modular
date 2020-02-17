@@ -386,9 +386,11 @@ void loop() {
       }
       if(switches & 0x04) { // down
         chord_mode = ( chord_mode == 0) ? 3 : chord_mode - 1;
+        set_note();
       }
       if(switches & 0x08) { // up
         chord_mode = (chord_mode+1)%4;
+        set_note();
       }
       if(switches & 0x10) { // left
         cycle_op1_waveform();
