@@ -230,7 +230,7 @@ void setup_voice_op1(byte voice) {
   set_voice_op1_ADSR(voice);
   set_voice_vca(voice); // ym3812_write(0x40 + op1, 0x00);  // ksl / output level
   set_voice_mult(voice); // ym3812_write(0x20 + op1, 0x20 | 0x03);  // multiplier + vibrato etc
-  cycle_voice_op1_waveform(voice); // ym3812_write(0xe0 + op1, 0x00);  // waveform (sine)
+  set_voice_op1_waveform(voice); // ym3812_write(0xe0 + op1, 0x00);  // waveform (sine)
 }
 
 void setup_voice_op2(byte voice) {
@@ -238,7 +238,7 @@ void setup_voice_op2(byte voice) {
   set_voice_op2_ADSR(voice);
   ym3812_write(0x40 + voice, 0x00);  // ksl / output level
   ym3812_write(0x20 + voice, 0x00 | 0x00 | 0x20 | 0x00 | 0x01 );  // AM, VIB, sus type, KSR, mult
-  cycle_voice_op2_waveform(voice);  // ym3812_write(0xe0 + op2, 0x02);  // waveform (half sine)
+  set_voice_op2_waveform(voice);  // ym3812_write(0xe0 + op2, 0x02);  // waveform (half sine)
 }
 
 void set_voice_op1_ADSR(byte voice) {
@@ -251,13 +251,11 @@ void set_voice_op2_ADSR(byte voice) {
   ym3812_write(0x83 + voice, 0x0f);  // sr
 }
 
-void cycle_voice_op1_waveform(byte voice) {  
-  wf1 = (wf1 + 1) % 4;
+void set_voice_op1_waveform(byte voice) {  
   ym3812_write(0xe0 + voice, wf1);
 }
 
-void cycle_voice_op2_waveform(byte voice) {
-  wf2 = (wf2 + 1) % 4;
+void set_voice_op2_waveform(byte voice) {
   ym3812_write(0xe3 + voice, wf2);
 }
 
@@ -294,13 +292,15 @@ void set_op2_ADSR() {
 }
 
 void cycle_op1_waveform() {
-  cycle_voice_op1_waveform(0);
-  cycle_voice_op1_waveform(1);
+  wf1 = (wf1 + 1) % 4;
+  set_voice_op1_waveform(0);
+  set_voice_op1_waveform(1);
 }
 
 void cycle_op2_waveform() {
-  cycle_voice_op2_waveform(0);
-  cycle_voice_op2_waveform(1);
+  wf2 = (wf2 + 1) % 4;
+  set_voice_op2_waveform(0);
+  set_voice_op2_waveform(1);
 }
 
 void cycle_algo() {
