@@ -173,15 +173,18 @@ void write_two_digit(byte value) {
 void write_to_lcd()
 {
   mcp.digitalWrite(lcd_rs, false); // command register
-  lcd_write(0x81); // "move cursor to beginning of first line"
+  lcd_write(0x80 + 0); // "move cursor to beginning of first line"
 
   // write some chars
   mcp.digitalWrite(lcd_rs, true); // data register
   write_one_digit(fb);
+  lcd_write(' ');
   write_one_digit(wf1);
+  lcd_write(' ');
   write_one_digit(wf2);
+  lcd_write(' ');
   write_one_digit(algo);
-  write_two_digit(vca);
+  //write_two_digit(vca);
   lcd_write(' ');
   write_one_digit(chord_mode);
 }
@@ -332,15 +335,14 @@ void set_algo_fb() {
 
 unsigned int count = 0;
 bool dirty = false;
+int tune = 0;
+int new_fb = 0;
 void loop() {
-  // sample analog inputs
+  // sample FAST analog inputs
   int pitchcv = analogRead(A1) / 2;
-  int tune = map(analogRead(A2), 0, 1023, -200, 200);
   int new_vca = map(analogRead(A3), 0, 1023, 0, 64);
   new_vca = constrain(new_vca, 0, 63);
   int new_mult = map(analogRead(A6), 0, 1023, 0, 15);
-  int new_fb = map(analogRead(A7), 0, 1023, 0, 8);
-  new_fb = constrain(new_fb, 0, 7);
   
   // calculate new register values
   int new_note_num = map(pitchcv, 0, (1023 + tune) / 2, 0, 12*5);
@@ -356,7 +358,7 @@ void loop() {
     digitalWrite(13, true);
     vca = new_vca;
     set_vca();
-    dirty = true;
+    //dirty = true;
   }
 
   if( new_mult != mult) {
@@ -372,9 +374,14 @@ void loop() {
     dirty = true;
   }
 
-  // throttle to debounce
+  // throttled
   count += 1;
-  if( count % 10 == 0) {
+  if( count % 50 == 0) {
+    // sample SLOW ADC
+    tune = map(analogRead(A2), 0, 1023, -200, 200);
+    new_fb = map(analogRead(A7), 0, 1023, 0, 8);
+    new_fb = constrain(new_fb, 0, 7);
+  
     byte new_switches = ~(mcp.readGPIO(0) & 0x1F); // 0 is portA
     if(new_switches != switches) {
       switches = new_switches;
@@ -397,11 +404,13 @@ void loop() {
       }
       dirty = true;
     }
+
+    if(dirty == true) {
+      write_to_lcd();
+      dirty = false;
+    }
   }
 
-  if(dirty == true) {
-    write_to_lcd();
-    dirty = false;
-  }
+
   digitalWrite(13, false);
 }
