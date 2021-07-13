@@ -233,13 +233,18 @@ void setup() {
   ym3812_write(0xbd, 0xc0);  // full vib/tremolo depth
 
   // per voice
-  set_voice_algo_fb(0);
-  setup_voice_op2(0);
-  setup_voice_op1(0);
-
-  set_voice_algo_fb(1);
-  setup_voice_op2(1);
-  setup_voice_op1(1);
+  for(byte i=0; i<9; i+=1) {
+    byte vo = voice_register_offsets[i];
+    set_voice_algo_fb(vo);
+    setup_voice_op2(vo);
+    setup_voice_op1(vo);
+    if( i != 0 ) {
+      silence_voice(vo);
+    }
+  }
+//  set_voice_algo_fb(0);
+//  setup_voice_op2(0);
+//  setup_voice_op1(0);
 }
 
 void setup_voice_op1(byte voice) {
@@ -281,6 +286,10 @@ void set_voice_algo(byte voice) {
 }
 
 void set_voice_note(byte voice, byte note_offset) {
+  if(note_num + note_offset < 0 || note_num + note_offset > sizeof(notetbl)) {
+    silence_voice(voice);
+    return;
+  }
   unsigned int fnum = notetbl[note_num + note_offset];
   ym3812_write(0xa0 + voice, fnum & 0x00ff);  // least significant byte of f-num
   ym3812_write(0xb0 + voice, 0x20 | ((fnum >> 8) & 0x00FF) ) ;  // f-num, octave, key on
@@ -298,53 +307,108 @@ void set_voice_algo_fb(byte voice) {
   ym3812_write(0xc0 + voice, algo | ((fb & 0x7) << 1));
 }
 
+//typedef void (*voiceable)(byte);
+
+byte num_voices = 1;
+void set_notes() {
+  byte chords[][3] = {
+    {0, -1, -1}, // 0 root
+    {0,  4, -1}, // 1 major third
+    {0,  3, -1}, // 2 minor third
+    {0,  4,  7}, // 3 major triad
+    {0,  3,  7}, // 4 minor triad
+    {0,  7, 12}, // 5 fifth and octave
+    {0, 12, 24}, // 6 octave and double octave
+    //{0, 4, 7, 12, 16, 19, 24},
+  };
+  // chord mode 0: do not play a chord; only use voice 0
+  // mode 1: major 3
+  // mode 2: minor 3
+  // mode 3: fifth
+  // mode 4: octave
+  // mode 5: major chord
+  // mode 6: minor chord
+  // mode 7: fifth and octave
+  // mode 8: two octaves
+  // mode 9: mega mode - major chord, and its octaves
+  num_voices = 0;
+  for(byte i=0; i< 3; i+=1) {
+    byte offset = chords[chord_mode][i];
+    if( offset != -1) {
+      num_voices += 1;
+      set_voice_note(voice_register_offsets[i], offset);
+    } else {
+      silence_voice(voice_register_offsets[i]);
+    }
+  }
+}
+
+void apply_to_active_voices( void vfn(byte)) {
+  for(byte i=0; i<num_voices; i+=1) {
+    vfn(voice_register_offsets[i]);
+  }
+}
+
+void silence_voice(byte voice) {
+  ym3812_write(0xb0 + voice, 0x00);
+}
+
 void set_op1_ADSR() {
-  set_voice_op1_ADSR(0);
-  set_voice_op1_ADSR(1);
+//  set_voice_op1_ADSR(0);
+//  set_voice_op1_ADSR(1);
+  apply_to_active_voices(set_voice_op1_ADSR);
 }
 
 void set_op2_ADSR() {
-  set_voice_op2_ADSR(0);
-  set_voice_op2_ADSR(1);
+//  set_voice_op2_ADSR(0);
+//  set_voice_op2_ADSR(1);
+  apply_to_active_voices(set_voice_op2_ADSR);
 }
 
 void cycle_op1_waveform() {
   wf1 = (wf1 + 1) % 4;
-  set_voice_op1_waveform(0);
-  set_voice_op1_waveform(1);
+//  set_voice_op1_waveform(0);
+//  set_voice_op1_waveform(1);
+  apply_to_active_voices(set_voice_op1_waveform);
 }
 
 void cycle_op2_waveform() {
   wf2 = (wf2 + 1) % 4;
-  set_voice_op2_waveform(0);
-  set_voice_op2_waveform(1);
+//  set_voice_op2_waveform(0);
+//  set_voice_op2_waveform(1);
+  apply_to_active_voices(set_voice_op2_waveform);
 }
 
 void cycle_algo() {
   algo = (algo + 1) % 2;
-  set_voice_algo(0);
-  set_voice_algo(1);
+//  set_voice_algo(0);
+//  set_voice_algo(1);
+  apply_to_active_voices(set_voice_algo);
 }
 
 void set_note() {
-  byte offsets[] = { 3, 5, 7, 12};
-  set_voice_note(0, 0);
-  set_voice_note(1, offsets[chord_mode]);
+//  byte offsets[] = { 3, 5, 7, 12};
+//  set_voice_note(0, 0);
+//  set_voice_note(1, offsets[chord_mode]);
+  set_notes();
 }
 
 void set_vca() {
-  set_voice_vca(0);
-  set_voice_vca(1);
+//  set_voice_vca(0);
+//  set_voice_vca(1);
+  apply_to_active_voices(set_voice_vca);
 }
 
 void set_mult() {
-  set_voice_mult(0);
-  set_voice_mult(1);
+//  set_voice_mult(0);
+//  set_voice_mult(1);
+  apply_to_active_voices(set_voice_mult);
 }
 
 void set_algo_fb() {
-  set_voice_algo_fb(0);
-  set_voice_algo_fb(1);
+//  set_voice_algo_fb(0);
+//  set_voice_algo_fb(1);
+  apply_to_active_voices(set_voice_algo_fb);
 }
 
 unsigned int count = 0;
@@ -354,7 +418,7 @@ int new_fb = 0;
 void loop() {
   // sample FAST analog inputs
   int pitchcv = analogRead(A1) / 2;
-  int new_vca = map(analogRead(A3), 0, 1023, 0, 64);
+  int new_vca = map( map(analogRead(A3), 0, 1023, 1023, 0), 0, 1023, 0, 64);
   new_vca = constrain(new_vca, 0, 63);
   int new_mult = map(analogRead(A6), 0, 1023, 0, 15);
   
@@ -406,11 +470,11 @@ void loop() {
         cycle_op2_waveform();
       }
       if(switches & 0x04) { // down
-        chord_mode = ( chord_mode == 0) ? 3 : chord_mode - 1;
+        chord_mode = ( chord_mode == 0) ? 6 : chord_mode - 1;
         set_note();
       }
       if(switches & 0x08) { // up
-        chord_mode = (chord_mode+1)%4;
+        chord_mode = (chord_mode+1) % 7;
         set_note();
       }
       if(switches & 0x10) { // left
